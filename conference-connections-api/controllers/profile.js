@@ -3,7 +3,7 @@ const User = mongoose.model('User');
 
 module.exports.profileRead = function(req, res) {
 
-  if (!req.payload._id) {
+  if (!req.payload._id || req.payload.exp < Date.now() / 1000) {
     res.status(401).json({
       "message" : "UnauthorizedError: private profile"
     });
