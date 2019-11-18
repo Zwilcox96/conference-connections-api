@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const User = mongoose.model('User');
 
 module.exports.register = async function (req, res) {
-  await User
+  User
       .findById(req.payload._id).lean()
       .exec(function (err, requestor) {
         if(err){
@@ -35,6 +35,46 @@ module.exports.register = async function (req, res) {
           });
         }
       });
+};
+
+module.exports.resetPassword = function(req, res){
+    User
+        .findById(req.payload._id)
+        .exec(function (err, requestor) {
+            if(err){
+                console.warn(err);
+                res.status(500).json({
+                    "message": "Database error. Please contact your system adminisitrator"
+                })
+            }else if (!requestor.roles.includes('admin')) {
+                res.status(403).json({
+                    "message": "UnauthorizedError: You do not have permissions to create users"
+                });
+            } else {
+                User.findOne({email: req.body.email}, function(error, user){
+                    if(error){
+                        console.warn(error);
+                        res.status(404).json({
+                            "message": "Could not find user"
+                        });
+                    } else {
+                        console.log("here");
+                        let fakeUser = new User();
+                        fakeUser.setPassword(req.body.password);
+                        user.salt = fakeUser.salt;
+                        user.hash = fakeUser.hash;
+                        user.save(function (saveerr) {
+                            console.log("here2");
+                            res.status(204).send();
+                            if(error) {
+                                console.warn(saveerr)
+                            }
+                        })
+                    }
+                })
+            }
+        });
+
 };
 
 function createNewUser(req){
