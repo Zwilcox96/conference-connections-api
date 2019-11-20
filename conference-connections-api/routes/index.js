@@ -11,6 +11,7 @@ const ctrlAuth = require('../controllers/authentication');
 
 // profile
 router.get('/profile', auth, ctrlProfile.profileRead);
+router.post('/user-password-reset', auth, ctrlProfile.passwordReset);
 
 // authentication
 router.post('/register', auth, ctrlAuth.register);

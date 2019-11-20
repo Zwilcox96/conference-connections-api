@@ -58,24 +58,28 @@ module.exports.resetPassword = function(req, res){
                             "message": "Could not find user"
                         });
                     } else {
-                        console.log("here");
-                        let fakeUser = new User();
-                        fakeUser.setPassword(req.body.password);
-                        user.salt = fakeUser.salt;
-                        user.hash = fakeUser.hash;
-                        user.save(function (saveerr) {
-                            console.log("here2");
-                            res.status(204).send();
-                            if(error) {
-                                console.warn(saveerr)
-                            }
-                        })
+                        resetPassword(user, res);
                     }
                 })
             }
         });
 
 };
+
+module.exports.resetPassword = function(user, req, res){
+    let fakeUser = new User();
+    fakeUser.setPassword(req.body.password);
+    user.salt = fakeUser.salt;
+    user.hash = fakeUser.hash;
+    user.save(function (err) {
+        if(err) {
+            console.warn(err)
+        } else {
+            res.status(204).send();
+        }
+    })
+
+}
 
 function createNewUser(req){
     let user = new User();
