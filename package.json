@@ -1,6 +1,6 @@
 {
   "name": "conference-connections-api",
-  "version": "0.0.2",
+  "version": "0.0.2-alpha",
   "description": "The api for conference-connections",
   "main": "server.js",
   "scripts": {
