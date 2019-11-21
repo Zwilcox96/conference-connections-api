@@ -1,42 +1,103 @@
-let passport = require('passport');
-let mongoose = require('mongoose');
-let User = mongoose.model('User');
+const passport = require('passport');
+const mongoose = require('mongoose');
+const User = mongoose.model('User');
 
-const sendJSONresponse = function (res, status, content) {
-  res.status(status);
-  res.json(content);
+module.exports.register = async function (req, res) {
+  User
+      .findById(req.payload._id).lean()
+      .exec(function (err, requestor) {
+        if(err){
+          console.warn(err);
+          res.status(500).json({
+            "message": "Database error. Please contact your system adminisitrator"
+          })
+        }else if (!requestor.roles.includes('admin')) {
+          res.status(403).json({
+            "message": "UnauthorizedError: You do not have permissions to create users"
+          });
+        } else {
+          let user = createNewUser(req);
+          user.save(function (error) {
+              if (error) {
+                  console.log(error);
+                  if(error.code === 11000){
+                      res.status(409).json({
+                          "message": "This user already exists"
+                      })
+                  } else {
+                      res.status(500).json({
+                          "message": "Unable to create user"
+                      })
+                  }
+              } else {
+                  createAndSendToken(user, res);
+              }
+          });
+        }
+      });
 };
 
-module.exports.register = function(req, res) {
+module.exports.resetPassword = function(req, res){
+    User
+        .findById(req.payload._id)
+        .exec(function (err, requestor) {
+            if(err){
+                console.warn(err);
+                res.status(500).json({
+                    "message": "Database error. Please contact your system adminisitrator"
+                })
+            }else if (!requestor.roles.includes('admin')) {
+                res.status(403).json({
+                    "message": "UnauthorizedError: You do not have permissions to create users"
+                });
+            } else {
+                User.findOne({email: req.body.email}, function(error, user){
+                    if(error){
+                        console.warn(error);
+                        res.status(404).json({
+                            "message": "Could not find user"
+                        });
+                    } else {
+                        resetPassword(user, res);
+                    }
+                })
+            }
+        });
 
-  // if(!req.body.name || !req.body.email || !req.body.password) {
-  //   sendJSONresponse(res, 400, {
-  //     "message": "All fields required"
-  //   });
-  //   return;
-  // }
+};
 
-  let user = new User();
+module.exports.resetPassword = function(user, req, res){
+    let fakeUser = new User();
+    fakeUser.setPassword(req.body.password);
+    user.salt = fakeUser.salt;
+    user.hash = fakeUser.hash;
+    user.save(function (err) {
+        if(err) {
+            console.warn(err)
+        } else {
+            res.status(204).send();
+        }
+    })
 
-  user.name = req.body.name;
-  user.email = req.body.email;
-  user.roles = req.body.roles;
+}
 
-  user.setPassword(req.body.password);
+function createNewUser(req){
+    let user = new User();
+    user.name = req.body.name;
+    user.email = req.body.email;
+    user.roles = req.body.roles;
+    user.setPassword(req.body.password);
+    return user;
+}
 
-  console.log("here");
-
-  user.save(function(err) {
+function createAndSendToken(user, res){
     let token;
     token = user.generateJwt();
     res.status(200);
     res.json({
-      "token" : token
+        "token": token
     });
-  });
-
-};
-
+}
 module.exports.login = function(req, res) {
 
   // if(!req.body.email || !req.body.password) {
@@ -47,7 +108,6 @@ module.exports.login = function(req, res) {
   // }
 
   passport.authenticate('local', function(err, user, info){
-    let token;
 
     // If Passport throws/catches an error
     if (err) {
@@ -57,11 +117,7 @@ module.exports.login = function(req, res) {
 
     // If a user is found
     if(user){
-      token = user.generateJwt();
-      res.status(200);
-      res.json({
-        "token" : token
-      });
+      createAndSendToken(user, res);
     } else {
       // If user is not found
       res.status(401).json(info);

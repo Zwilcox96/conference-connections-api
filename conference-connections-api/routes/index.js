@@ -11,9 +11,11 @@ const ctrlAuth = require('../controllers/authentication');
 
 // profile
 router.get('/profile', auth, ctrlProfile.profileRead);
+router.post('/user-password-reset', auth, ctrlProfile.passwordReset);
 
 // authentication
-router.post('/register', ctrlAuth.register);
+router.post('/register', auth, ctrlAuth.register);
 router.post('/login', ctrlAuth.login);
+router.post('/update-password', auth, ctrlAuth.resetPassword);
 
 module.exports = router;
