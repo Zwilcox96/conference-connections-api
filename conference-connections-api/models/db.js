@@ -6,7 +6,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 mongoose.connect(dbURI);
-
+mongoose.Promise = global.Promise;
 // CONNECTION EVENTS
 mongoose.connection.on('connected', function() {
   console.log('Mongoose connected to ' + dbURI);
@@ -47,4 +47,5 @@ process.on('SIGTERM', function() {
 
 // BRING IN YOUR SCHEMAS & MODELS
 require('./users');
+require('./attendees');
 module.exports = {mongoose};

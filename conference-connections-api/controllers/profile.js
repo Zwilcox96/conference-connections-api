@@ -3,35 +3,13 @@ const auth = require('./authentication');
 const User = mongoose.model('User');
 
 module.exports.profileRead = function(req, res) {
-
-  if (!req.payload._id || req.payload.exp < Date.now() / 1000) {
-    res.status(403).json({
-      "message" : "UnauthorizedError: private profile"
-    });
-  } else {
-    User
-      .findById(req.payload._id)
-      .exec(function(err, user) {
-        res.status(200).json({
-          "name": user.name,
-          "roles": user.roles,
-          "email": user.email
-        });
-      });
-  }
-
+  res.status(200).json({
+    "name": req.user.name,
+    "roles": req.user.roles,
+    "email": req.user.email
+  });
 };
 
 module.exports.passwordReset = function (req, res) {
-  if (!req.payload._id || req.payload.exp < Date.now() / 1000) {
-    res.status(403).json({
-      "message" : "UnauthorizedError: private profile"
-    });
-  } else {
-  User
-      .findById(req.payload._id)
-      .exec(function(err, user) {
-         auth.resetPassword(user, req, res);
-        });
-  }
+  auth.resetPassword(req.user, req, res);
 };

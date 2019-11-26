@@ -10,6 +10,8 @@ require('./conference-connections-api/models/db');
 require('./conference-connections-api/config/passport');
 
 const routesApi = require('./conference-connections-api/routes/index');
+const profileApi = require('./conference-connections-api/routes/profile');
+const attendeeApi = require('./conference-connections-api/routes/attendees');
 
 
 
@@ -22,7 +24,9 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use(passport.initialize());
-app.use('/api', routesApi);
+app.use('/api/auth', routesApi);
+app.use('/api/profile', passport.authenticate('jwt', {session:false}), profileApi);
+app.use('/api/attendee', passport.authenticate('jwt', {session:false}), attendeeApi);
 app.listen(8000, () => {
   console.log('Server Started!')
 });
@@ -40,6 +44,12 @@ app.use(function (err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
     res.status(401);
     res.json({"message" : err.name + ": " + err.message});
+  } else {
+    res.status(404);
+    res.json({
+                "message": "route not found",
+                "err":  err.name + ": " + err.message
+              })
   }
 });
 
