@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 require('./conference-connections-api/models/db');
 require('./conference-connections-api/config/passport');
 
@@ -22,11 +23,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
+app.use(fileUpload({}));
 
 app.use(passport.initialize());
 app.use('/api/auth', routesApi);
 app.use('/api/profile', passport.authenticate('jwt', {session:false}), profileApi);
-app.use('/api/attendee', passport.authenticate('jwt', {session:false}), attendeeApi);
+app.use('/api/attendees', passport.authenticate('jwt', {session:false}), attendeeApi);
 app.listen(8000, () => {
   console.log('Server Started!')
 });
